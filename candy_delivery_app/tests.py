@@ -1,12 +1,13 @@
 from django.test import TestCase
+from . import models
 
 
 # =====================================================================================================================
 
 
-class MyTest(TestCase):
+class ImportCouriersTest(TestCase):
 
-    def test(self):
+    def test_valid_request(self):
         data = \
             '{' \
             '   "data": [' \
@@ -30,4 +31,39 @@ class MyTest(TestCase):
             '       }' \
             '   ]' \
             '}'
-        self.client.post('/couriers', data, 'application/json')
+        response = self.client.post('/couriers', data, 'application/json')
+        self.assertEqual(response.status_code, 201)
+        self.assertJSONEqual(
+            response.content,
+            '{"couriers": [{"id": 1}, {"id": 2}, {"id": 3}]}',
+        )
+
+        couriers = models.Courier.objects.all()
+        self.assertEqual(len(couriers), 3)
+        for courier in couriers:
+            if courier.id == 1:
+                expected_type = 'foot'
+                expected_regions = [1, 12, 22]
+                expected_working_hours = ['11:35-14:05', '09:00-11:00']
+            elif courier.id == 2:
+                expected_type = 'bike'
+                expected_regions = [22]
+                expected_working_hours = ['09:00-18:00']
+            elif courier.id == 3:
+                expected_type = 'car'
+                expected_regions = [12, 22, 23, 33]
+                expected_working_hours = []
+            else:
+                self.assert_(False, 'Wrong ID')
+                break
+
+            self.assertEqual(courier.type, expected_type)
+            self.assertEqual(
+                [r.code for r in courier.region_set.all()],
+                expected_regions
+            )
+            self.assertEqual(
+                [i.start.strftime('%H:%M') + '-' + i.end.strftime('%H:%M')
+                 for i in courier.interval_set.all()],
+                expected_working_hours,
+            )
