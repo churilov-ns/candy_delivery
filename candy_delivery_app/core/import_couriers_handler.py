@@ -65,6 +65,7 @@ class ImportCouriersHandler(RequestHandler):
 
         except KeyError:
             self.__invalid_ids.append(courier_id)
+            return
 
         if len(item) > 0:
             self.__invalid_ids.append(courier_id)
