@@ -1,5 +1,5 @@
 from ._request_handler import RequestHandler
-from ..models import Courier, Region, Interval
+from candy_delivery_app.models import Courier, Region, Interval
 
 
 # =====================================================================================================================
@@ -17,6 +17,9 @@ class ImportCouriersHandler(RequestHandler):
     """
     Обработчик запроса на добавление курьеров
     """
+
+    def __init__(self, **kwargs):
+        super().__init__(True, **kwargs)
 
     def _process(self, data):
         self.__couriers = list()

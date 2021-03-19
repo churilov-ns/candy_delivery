@@ -86,3 +86,6 @@ class Interval(models.Model):
 
     # Конец интервала
     end = models.TimeField()
+
+    def __str__(self):
+        return self.start.strftime('%H:%M') + '-' + self.end.strftime('%H:%M')
