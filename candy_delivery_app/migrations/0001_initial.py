@@ -42,8 +42,8 @@ class Migration(migrations.Migration):
             name='Interval',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.TimeField()),
-                ('end', models.TimeField()),
+                ('min_time', models.TimeField()),
+                ('max_time', models.TimeField()),
                 ('courier', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to='candy_delivery_app.courier')),
                 ('order', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to='candy_delivery_app.order')),
             ],

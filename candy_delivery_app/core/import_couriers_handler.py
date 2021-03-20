@@ -1,5 +1,5 @@
 from ._request_handler import RequestHandler
-from candy_delivery_app.models import Courier, Region, Interval
+from .. import models
 
 
 # =====================================================================================================================
@@ -22,64 +22,40 @@ class ImportCouriersHandler(RequestHandler):
         super().__init__(True, **kwargs)
 
     def _process(self, data):
-        self.__couriers = list()
-        self.__regions = list()
-        self.__intervals = list()
-        self.__invalid_ids = list()
+        couriers = list()
+        invalid_ids = list()
+        try:
+            for item in data['data']:
+                try:
+                    courier = models.Courier.create_from_item(item)
+                    courier.full_clean()
+                    couriers.append(courier)
+                except models.ObjectValidationError as e:
+                    invalid_ids.append(e.object_id)
+        except (KeyError, TypeError) as e:
+            self._status = 400
+            self._content = {
+                'error': e.__str__()
+            }
+            return
 
-        for item in data['data']:
-            self.__parse_item(item)
-
-        if len(self.__invalid_ids) > 0:
+        if len(invalid_ids) > 0:
             self._status = 400
             self._content = {
                 'validation_error': {
-                    'couriers': self.__create_ids_list(
-                        self.__invalid_ids),
+                    'couriers': self.__create_ids_list(invalid_ids),
                 },
             }
         else:
-            self.__save_data()
+            imported_ids = list()
+            for courier in couriers:
+                courier.save()
+                courier.save_related_objects()
+                imported_ids.append(courier.id)
             self._status = 201
             self._content = {
-                'couriers': self.__create_ids_list(
-                    [c.id for c in self.__couriers]),
+                'couriers': self.__create_ids_list(imported_ids),
             }
-
-    def __parse_item(self, item):
-        courier_id = item.pop('courier_id')
-        try:
-            courier = Courier(id=courier_id, type=item.pop('courier_type'))
-            self.__couriers.append(courier)
-
-            for region in item.pop('regions'):
-                self.__regions.append(Region(
-                    code=region,
-                    courier=courier,
-                ))
-
-            for interval in item.pop('working_hours'):
-                parts = interval.split('-')
-                self.__intervals.append(Interval(
-                    start=parts[0],
-                    end=parts[1],
-                    courier=courier,
-                ))
-
-        except KeyError:
-            self.__invalid_ids.append(courier_id)
-            return
-
-        if len(item) > 0:
-            self.__invalid_ids.append(courier_id)
-
-    def __save_data(self):
-        for courier in self.__couriers:
-            courier.save()
-        for region in self.__regions:
-            region.save()
-        for interval in self.__intervals:
-            interval.save()
 
     @staticmethod
     def __create_ids_list(ids):

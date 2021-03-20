@@ -2,7 +2,7 @@ import abc
 from django.http import HttpResponseNotFound
 from django.core.exceptions import ObjectDoesNotExist
 from ._request_handler import RequestHandler
-from candy_delivery_app.models import Courier
+from .. import models
 
 
 # =====================================================================================================================
@@ -24,7 +24,7 @@ class CourierHandler(RequestHandler, abc.ABC):
     def _process(self, data):
         try:
             courier_id = int(self._request.path.split('/')[-1])
-            self._process_courier(Courier.objects.get(id=courier_id), data)
+            self._process_courier(models.Courier.objects.get(id=courier_id), data)
         except ObjectDoesNotExist:
             self._response = HttpResponseNotFound()
 

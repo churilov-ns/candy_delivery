@@ -1,7 +1,6 @@
-from contextlib import suppress
 from django.http import HttpResponseBadRequest
 from ._courier_handler import CourierHandler
-from candy_delivery_app.models import Region, Interval
+from .. import models
 
 
 # =====================================================================================================================
@@ -24,46 +23,26 @@ class UpdateCourierHandler(CourierHandler):
         super().__init__(True, **kwargs)
 
     def _process_courier(self, courier, data):
-        with suppress(KeyError):
-            courier.type = data.pop('courier_type')
-
-        new_regions = list()
-        with suppress(KeyError):
-            for region in data.pop('regions'):
-                new_regions.append(Region(
-                    code=region,
-                    courier=courier,
-                ))
-
-        new_intervals = list()
-        with suppress(KeyError):
-            for interval in data.pop('working_hours'):
-                parts = interval.split('-')
-                new_intervals.append(Interval(
-                    start=parts[0],
-                    end=parts[1],
-                    courier=courier,
-                ))
-
-        if len(data) > 0:
+        try:
+            affected_fields = courier.update_from_item(data)
+            courier.full_clean()
+        except models.ObjectValidationError:
             self._response = HttpResponseBadRequest()
             return
 
-        if len(new_regions) > 0:
+        if 'regions' in affected_fields:
             courier.region_set.all().delete()
-            for region in new_regions:
-                region.save()
-        if len(new_intervals) > 0:
+        if 'working_hours' in affected_fields:
             courier.interval_set.all().delete()
-            for interval in new_intervals:
-                interval.save()
-        courier.save()
+        if 'courier_type' in affected_fields:
+            courier.save()
+        if len(courier.related_objects) > 0:
+            courier.save_related_objects()
         courier.refresh_from_db()
 
+        # TODO: обновить назначенные заказы
+        # ...
+        # ...
+
         self._status = 200
-        self._content = {
-            'courier_id': courier.id,
-            'courier_type': courier.type,
-            'regions': [r.code for r in courier.region_set.all()],
-            'working_hours': [str(i) for i in courier.interval_set.all()],
-        }
+        self._content = courier.to_item()

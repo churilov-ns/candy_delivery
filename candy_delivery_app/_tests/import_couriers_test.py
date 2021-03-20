@@ -67,7 +67,7 @@ class ImportCouriersTest(TestCase):
 
             self.assertEqual(courier.type, expected_type)
             self.assertEqual(
-                [r.code for r in courier.region_set.all()],
+                [r.number for r in courier.region_set.all()],
                 expected_regions
             )
             self.assertEqual(
