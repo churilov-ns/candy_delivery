@@ -24,7 +24,7 @@ class UpdateCourierHandler(CourierHandler):
 
     def _process_courier(self, courier, data):
         try:
-            affected_fields = courier.update_from_item(data)
+            affected_fields = courier.update(data)
             courier.full_clean()
         except models.ObjectValidationError:
             self._response = HttpResponseBadRequest()

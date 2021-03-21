@@ -96,6 +96,24 @@ class ImportCouriersTest(TestCase):
             '           "regions": [12, 22, 23, 33],' \
             '           "working_hours": [],' \
             '           "unknown_field": 100500' \
+            '       },' \
+            '       {' \
+            '           "courier_id": 4,' \
+            '           "courier_type": "car",' \
+            '           "regions": [],' \
+            '           "working_hours": [152, "eeee"]' \
+            '       },' \
+            '       {' \
+            '           "courier_id": "abc",' \
+            '           "courier_type": "bus",' \
+            '           "regions": ["one", "two", "three"],' \
+            '           "working_hours": ["09-10:15", 152, "eeee"]' \
+            '       },' \
+            '       {' \
+            '           "courier_id": 5,' \
+            '           "courier_type": "bus",' \
+            '           "regions": [],' \
+            '           "working_hours": []' \
             '       }' \
             '   ]' \
             '}'
@@ -103,5 +121,5 @@ class ImportCouriersTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertJSONEqual(
             response.content,
-            '{"validation_error": {"couriers": [{"id": 2}, {"id": 3}]}}',
+            '{"validation_error": {"couriers": [{"id": 2}, {"id": 3}, {"id": 4}, {"id": "abc"}, {"id": 5}]}}',
         )

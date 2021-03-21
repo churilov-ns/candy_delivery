@@ -3,6 +3,7 @@ from django.views.decorators.http import require_POST
 from .core import (
     ImportCouriersHandler,
     UpdateCourierHandler,
+    ImportOrdersHandler,
 )
 
 
@@ -29,3 +30,11 @@ def get_patch_courier(request):
         return JsonResponse(
             {'error': 'Allowed methods are: PATCH, GET'}, status=405
         )
+
+
+@require_POST
+def post_orders(request):
+    """
+    Загрузка списка заказов в систему
+    """
+    return ImportOrdersHandler().process(request)

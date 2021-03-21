@@ -30,12 +30,12 @@ class RelatedObjectsMixin(object):
         self.related_objects = list()
 
     def clean(self):
-        for obj in self.related_objects:
-            obj.full_clean()
+        for object_ in self.related_objects:
+            object_.full_clean()
 
     def save_related_objects(self, *args, **kwargs):
-        for obj in self.related_objects:
-            obj.save(*args, **kwargs)
+        for object_ in self.related_objects:
+            object_.save(*args, **kwargs)
         self.related_objects = list()
 
 
@@ -64,18 +64,23 @@ class Courier(models.Model, RelatedObjectsMixin):
     )
 
     @classmethod
-    def create_from_item(cls, item):
+    def from_item(cls, item):
         try:
             courier_id = item.pop('courier_id')
         except KeyError as e:
             raise ValidationError(
-                'No "courier_id" field provided') from e
+                'No "courier_id" parameter provided') from e
 
         courier = Courier(id=courier_id)
-        courier.update_from_item(item, True)
-        return courier
+        courier.update(item, True)
+        try:
+            courier.full_clean()
+            return courier
+        except ValidationError as e:
+            raise ObjectValidationError(
+                courier_id, e.__str__()) from e
 
-    def update_from_item(self, item, strict_mode=False):
+    def update(self, item, strict_mode=False):
         affected_fields = set()
         try:
             value = self._extract_value(item, 'courier_type', strict_mode)
@@ -99,7 +104,7 @@ class Courier(models.Model, RelatedObjectsMixin):
 
         if len(item) > 0:
             raise ObjectValidationError(
-                self.id, 'Unsupported fields provided')
+                self.id, 'Unsupported parameters provided')
         return affected_fields
 
     def to_item(self):
@@ -117,7 +122,7 @@ class Courier(models.Model, RelatedObjectsMixin):
         except KeyError as e:
             if strict_mode:
                 raise ValidationError(
-                    'Missing required field "{0}"'.format(key)) from e
+                    'Missing required parameter "{0}"'.format(key)) from e
 
 
 # =====================================================================================================================
@@ -171,6 +176,39 @@ class Order(models.Model, RelatedObjectsMixin):
         blank=True,
         default=None,
     )
+
+    @classmethod
+    def from_item(cls, item):
+        try:
+            order_id = item.pop('order_id')
+        except KeyError as e:
+            raise ValidationError(
+                'No "order_id" parameter provided') from e
+
+        order = Order(id=order_id)
+        try:
+            order.weight = str(item.pop('weight'))
+            order.region = item.pop('region')
+            order.related_objects += Interval.from_string_list(
+                item.pop('delivery_hours'), order_fk=order
+            )
+        except KeyError as e:
+            raise ObjectValidationError(
+                order.id, 'Missing required parameters') from e
+        except ValidationError as e:
+            raise ObjectValidationError(
+                order.id, e.__str__()) from e
+
+        if len(item) > 0:
+            raise ObjectValidationError(
+                order.id, 'Unsupported parameters provided')
+
+        try:
+            order.full_clean()
+            return order
+        except ValidationError as e:
+            raise ObjectValidationError(
+                order_id, e.__str__()) from e
 
 
 # =====================================================================================================================

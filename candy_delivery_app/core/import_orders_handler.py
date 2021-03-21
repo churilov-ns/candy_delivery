@@ -6,23 +6,23 @@ from .. import models
 
 
 __all__ = [
-    'ImportCouriersHandler',
+    'ImportOrdersHandler',
 ]
 
 
 # =====================================================================================================================
 
 
-class ImportCouriersHandler(ImportHandler):
+class ImportOrdersHandler(ImportHandler):
     """
-    Обработчик запроса на добавление курьеров
+    Обработчик запроса на добавление заказов
     """
 
-    _OUTPUT_KEY = 'couriers'
+    _OUTPUT_KEY = 'orders'
 
     @staticmethod
     def _init_object(item):
-        return models.Courier.from_item(item)
+        return models.Order.from_item(item)
 
     @staticmethod
     def _save_object(object_):
