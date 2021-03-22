@@ -27,16 +27,17 @@ class CompleteOrderHandler(RequestWithContentHandler):
         """
         try:
             order = models.Order.objects.get(id=data['order_id'])
-            courier = models.Courier.objects.get(id=data['courier_id'])
         except ObjectDoesNotExist:
             self._response = HttpResponseBadRequest
             return
 
-        if order.courier != courier:
+        if order.delivery is None or \
+                order.delivery.courier.id != data['courier_id']:
             self._response = HttpResponseBadRequest
         else:
             order.complete_time = data['complete_time']
             order.save()
+            order.delivery.update_complete()
             self._status = 200
             self._content = {
                 'order_id': order.id,

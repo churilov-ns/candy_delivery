@@ -17,21 +17,18 @@ class UpdateCourierTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        Courier.objects.create(id=1)
-        CourierType.objects.create(courier_id=1, type='foot')
+        Courier.objects.create(id=1, type='foot')
         Region.objects.create(courier_id=1, number=1)
         Region.objects.create(courier_id=1, number=12)
         Region.objects.create(courier_id=1, number=22)
         Interval.objects.create(courier_id=1, min_time='09:00', max_time='11:00')
         Interval.objects.create(courier_id=1, min_time='11:35', max_time='14:05')
 
-        Courier.objects.create(id=2)
-        CourierType.objects.create(courier_id=2, type='bike')
+        Courier.objects.create(id=2, type='bike')
         Region.objects.create(courier_id=2, number=22)
         Interval.objects.create(courier_id=2, min_time='09:00', max_time='18:00')
 
-        Courier.objects.create(id=3)
-        CourierType.objects.create(courier_id=3, type='car')
+        Courier.objects.create(id=3, type='car')
         Region.objects.create(courier_id=3, number=12)
         Region.objects.create(courier_id=3, number=22)
         Region.objects.create(courier_id=3, number=23)

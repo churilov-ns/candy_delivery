@@ -1,5 +1,4 @@
 from decimal import Decimal
-from datetime import datetime
 from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 from ._request_handler import RequestWithContentHandler
@@ -34,46 +33,49 @@ class AssignOrdersHandler(RequestWithContentHandler):
             self._response = HttpResponseBadRequest
             return
 
-        assigned_orders = cw.object_.order_set.filter(
-            complete_time=None)
+        try:
+            delivery = models.Delivery.objects.get(
+                courier=cw.object_, is_complete=False
+            )
+        except ObjectDoesNotExist:
+            delivery = models.Delivery.objects.create(
+                courier=cw.object_,
+                earnings_factor=cw.object_.earnings_factor
+            )
 
-        if len(assigned_orders) == 0:
-            assigned_orders = list()
-            assign_time = datetime.now()
             total_weight = Decimal('0.00')
-            for order in models.Order.objects.firter(
-                    courier=None).order_by('weight'):
-
+            free_orders = models.Order.objects.firter(
+                delivery=None).order_by('weight')
+            for order in free_orders:
                 if not cw.test_order(OrderWrapper(order, True)):
                     continue
 
                 total_weight += order.weight
-                if not cw.test_weight(total_weight):
+                if total_weight > cw.object_.max_weight:
                     break
 
-                order.assign_time = assign_time
-                order.courier = cw.object_
-                order.save()
-                assigned_orders.append(order)
+                delivery.order_set.add(order)
 
         self._status = 200
         self._content = self.__create_content(
-            assigned_orders
+            delivery
         )
 
     @staticmethod
-    def __create_content(assigned_orders):
+    def __create_content(delivery):
         """
         Формирование выходной структуры данных
-        :param list(models.Order) assigned_orders: список заказов
+        :param models.Delivery delivery: развоз
         :return dict: выходная структура данных
         """
-        if len(assigned_orders) > 0:
+        orders = delivery.order_set.all()
+        if len(orders) > 0:
             return {
-                'orders': [{'id': o.id} for o in assigned_orders],
-                'assign_time': assigned_orders[0].assign_time,
+                'orders': [{'id': o.id} for o in orders],
+                'assign_time': delivery.assign_time,
             }
         else:
+            delivery.delete()
             return {
                 'orders': list()
             }

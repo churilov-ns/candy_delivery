@@ -15,21 +15,6 @@ class Courier(models.Model):
     Данные о курьере
     """
 
-    # Идентификатор
-    id = models.IntegerField(
-        primary_key=True,
-        validators=[MinValueValidator(0)],
-    )
-
-
-# =====================================================================================================================
-
-
-class CourierType(models.Model):
-    """
-    История типов курьера
-    """
-
     class AllowedTypes(models.TextChoices):
         """
         Возможные типы курьера
@@ -38,17 +23,15 @@ class CourierType(models.Model):
         BIKE = 'bike'
         CAR = 'car'
 
-    # Эпоха изменения
-    change_time = models.DateTimeField(auto_now=True)
+    # Идентификатор
+    id = models.IntegerField(
+        primary_key=True,
+        validators=[MinValueValidator(0)],
+    )
 
     # Тип курьера
     type = models.CharField(
         max_length=4, choices=AllowedTypes.choices,
-    )
-
-    # Курьер
-    courier = models.ForeignKey(
-        Courier, on_delete=models.CASCADE,
     )
 
     @property
@@ -81,6 +64,43 @@ class CourierType(models.Model):
 # =====================================================================================================================
 
 
+class Delivery(models.Model):
+    """
+    Данные о развозе
+    """
+
+    # Назначенный курьер
+    courier = models.ForeignKey(
+        Courier, on_delete=models.CASCADE
+    )
+
+    # Коэффициент для расчета заработка
+    earnings_factor = models.IntegerField()
+
+    # Время назначения развоза
+    assign_time = models.DateTimeField(
+        auto_now=True
+    )
+
+    # Признак завершения развоза
+    is_complete = models.BooleanField(
+        default=False
+    )
+
+    def update_complete(self):
+        """
+        Проверка и обновление
+        признака завершения развоза
+        """
+        incomplete_orders = self.order_set.filter(
+            complete_time=None)
+        self.is_complete = len(incomplete_orders) == 0
+        self.save()
+
+
+# =====================================================================================================================
+
+
 class Order(models.Model):
     """
     Данные о заказе
@@ -107,20 +127,13 @@ class Order(models.Model):
         validators=[MinValueValidator(0)],
     )
 
-    # Назначенный курьер
-    courier = models.ForeignKey(
-        Courier,
+    # Развоз
+    delivery = models.ForeignKey(
+        Delivery,
         null=True,
         blank=True,
         default=None,
         on_delete=models.SET_NULL,
-    )
-
-    # Время назначения заказа
-    assign_time = models.DateTimeField(
-        null=True,
-        blank=True,
-        default=None,
     )
 
     # Время выполнения заказа
@@ -146,8 +159,7 @@ class Region(models.Model):
 
     # Курьер
     courier = models.ForeignKey(
-        Courier,
-        on_delete=models.CASCADE,
+        Courier, on_delete=models.CASCADE,
     )
 
     @classmethod

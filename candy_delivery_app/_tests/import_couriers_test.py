@@ -66,7 +66,7 @@ class ImportCouriersTest(TestCase):
                 break
 
             self.assertEqual(
-                courier.couriertype_set.latest('change_time').type, expected_type
+                courier.type, expected_type
             )
             self.assertEqual(
                 [r.number for r in courier.region_set.all()],

@@ -1,3 +1,4 @@
+import sys
 import abc
 import json
 from django.http import JsonResponse
@@ -47,6 +48,7 @@ class RequestHandler(abc.ABC):
                 data = json.loads(request.read())
             self._process(data)
         except Exception as error:
+            print(error, file=sys.stderr)
             self._status = 500
             self._content = {
                 'error': str(error),
