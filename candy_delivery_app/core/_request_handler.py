@@ -19,6 +19,7 @@ class RequestHandler(abc.ABC):
     Базовый класс обработки запроса
     """
 
+    # TODO: создать 2 наследника - с parse_request_content=False и True
     def __init__(self, parse_request_content, *, default_status=500):
         self._parse_request_content = parse_request_content
         self._response_type = JsonResponse
@@ -35,7 +36,7 @@ class RequestHandler(abc.ABC):
                 data = json.loads(request.read())
             self._process(data)
         except Exception as error:
-            self._status = 500
+            self._status = 500  # TODO: изменить на 400 Bad Request
             self._content = {
                 'error': str(error),
             }

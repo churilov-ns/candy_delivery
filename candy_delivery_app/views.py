@@ -4,6 +4,8 @@ from .core import (
     ImportCouriersHandler,
     UpdateCourierHandler,
     ImportOrdersHandler,
+    AssignOrdersHandler,
+    CompleteOrderHandler,
 )
 
 
@@ -38,3 +40,19 @@ def post_orders(request):
     Загрузка списка заказов в систему
     """
     return ImportOrdersHandler().process(request)
+
+
+@require_POST
+def post_orders_assign(request):
+    """
+    Назначение заказов курьеру
+    """
+    return AssignOrdersHandler().process(request)
+
+
+@require_POST
+def post_orders_complete(request):
+    """
+    Регистрация выполнения заказа
+    """
+    return CompleteOrderHandler().process(request)

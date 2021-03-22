@@ -63,6 +63,15 @@ class Courier(models.Model, RelatedObjectsMixin):
         choices=AllowedTypes.choices,
     )
 
+    @property
+    def max_weight(self):
+        if self.type == self.AllowedTypes.FOOT:
+            return Decimal('10.00')
+        elif self.type == self.AllowedTypes.BIKE:
+            return Decimal('15.00')
+        elif self.type == self.AllowedTypes.CAR:
+            return Decimal('50.00')
+
     @classmethod
     def from_item(cls, item):
         try:
@@ -276,8 +285,21 @@ class Interval(models.Model):
     )
 
     def __str__(self):
-        return self.min_time.strftime('%H:%M') + \
-               '-' + self.max_time.strftime('%H:%M')
+        return self.min_time.strftime('%H:%M') + '-' + \
+               self.max_time.strftime('%H:%M')
+
+    def clean(self):
+        if self.max_time < self.min_time:
+            raise ValidationError(
+                '"min_time" must be less than or equal to "max_time"')
+
+    def intersects_with(self, other_interval):
+        if self.max_time <= other_interval.min_time:
+            return False
+        elif self.min_time >= other_interval.max_time:
+            return False
+        else:
+            return True
 
     @classmethod
     def from_string(cls, string, *, courier_fk=None, order_fk=None):
