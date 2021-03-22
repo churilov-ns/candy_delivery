@@ -2,8 +2,8 @@ from decimal import Decimal
 from datetime import datetime
 from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
-from ._request_handler import RequestHandler
+from ._request_handler import RequestWithContentHandler
+from ..wrappers import CourierWrapper, OrderWrapper
 from .. import models
 
 
@@ -18,55 +18,62 @@ __all__ = [
 # =====================================================================================================================
 
 
-class AssignOrdersHandler(RequestHandler):
+class AssignOrdersHandler(RequestWithContentHandler):
     """
     Класс обработки запроса на назначение заказов курьеру
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(True, **kwargs)
-
     def _process(self, data):
-        courier_id = data['courier_id']
+        """
+        Обработка запроса (специфическая часть)
+        :param data: данные запроса
+        """
         try:
-            courier = models.Courier.objects.get(id=courier_id)
+            cw = CourierWrapper.select(data['courier_id'], True)
         except ObjectDoesNotExist:
             self._response = HttpResponseBadRequest
             return
 
-        assigned_orders = models.Order.objects.firter(
-            Q(courier=courier) & Q(complete_datetime=None))
+        assigned_orders = cw.object_.order_set.filter(
+            complete_time=None)
+
+        if len(assigned_orders) == 0:
+            assigned_orders = list()
+            assign_time = datetime.now()
+            total_weight = Decimal('0.00')
+            for order in models.Order.objects.firter(
+                    courier=None).order_by('weight'):
+
+                if not cw.test_order(OrderWrapper(order, True)):
+                    continue
+
+                total_weight += order.weight
+                if not cw.test_weight(total_weight):
+                    break
+
+                order.assign_time = assign_time
+                order.courier = cw.object_
+                order.save()
+                assigned_orders.append(order)
+
+        self._status = 200
+        self._content = self.__create_content(
+            assigned_orders
+        )
+
+    @staticmethod
+    def __create_content(assigned_orders):
+        """
+        Формирование выходной структуры данных
+        :param list(models.Order) assigned_orders: список заказов
+        :return dict: выходная структура данных
+        """
         if len(assigned_orders) > 0:
-            assign_datetime = assigned_orders[0].assign_time
-
-        assign_datetime = datetime.now()
-        regions = set(courier.region_set.all())
-        working_hours = courier.interval_set.all()
-        free_orders = models.Order.objects.firter(courier=None).order_by('weight')
-        total_weight = Decimal('0.00')
-        assigned_orders = list()
-        for order in free_orders:
-            if order.region not in regions:
-                continue
-            match = False
-            for delivery_interval in order.interval_set.all():
-                for working_interval in working_hours:
-                    if working_interval.intersects_with(delivery_interval):
-                        match = True
-                        break
-            if not match:
-                continue
-            total_weight += order.weight
-            if total_weight > courier.max_weight:
-                break
-
-            order.courier = courier
-            order.assign_time = assign_datetime
-            order.save()
-
-            assigned_orders.append(order)
-
-        if len(assigned_orders) > 0:
-            pass
+            return {
+                'orders': [{'id': o.id} for o in assigned_orders],
+                'assign_time': assigned_orders[0].assign_time,
+            }
         else:
-            pass
+            return {
+                'orders': list()
+            }

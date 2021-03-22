@@ -1,6 +1,6 @@
 from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
-from ._request_handler import RequestHandler
+from ._request_handler import RequestWithContentHandler
 from .. import models
 
 
@@ -15,22 +15,19 @@ __all__ = [
 # =====================================================================================================================
 
 
-class CompleteOrderHandler(RequestHandler):
+class CompleteOrderHandler(RequestWithContentHandler):
     """
     Класс обработки запроса на завершение заказа
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(True, **kwargs)
-
     def _process(self, data):
-        courier_id = data['courier_id']
-        order_id = data['order_id']
-        complete_time = data['complete_time']
-
+        """
+        Обработка запроса (специфическая часть)
+        :param data: данные запроса
+        """
         try:
-            courier = models.Courier.objects.get(id=courier_id)
-            order = models.Order.objects.get(id=order_id)
+            order = models.Order.objects.get(id=data['order_id'])
+            courier = models.Courier.objects.get(id=data['courier_id'])
         except ObjectDoesNotExist:
             self._response = HttpResponseBadRequest
             return
@@ -38,9 +35,9 @@ class CompleteOrderHandler(RequestHandler):
         if order.courier != courier:
             self._response = HttpResponseBadRequest
         else:
-            order.complete_time = complete_time  # TODO: datetime -> time
+            order.complete_time = data['complete_time']
             order.save()
             self._status = 200
             self._content = {
-                'order_id': order_id,
+                'order_id': order.id,
             }
