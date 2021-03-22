@@ -38,7 +38,7 @@ class CompleteOrderHandler(RequestHandler):
         if order.courier != courier:
             self._response = HttpResponseBadRequest
         else:
-            order.complete_datetime = complete_time  # TODO: datetime -> time
+            order.complete_time = complete_time  # TODO: datetime -> time
             order.save()
             self._status = 200
             self._content = {

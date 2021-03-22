@@ -2,47 +2,15 @@ import re
 from decimal import Decimal
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import (
+    MinValueValidator, MaxValueValidator
+)
 
 
 # =====================================================================================================================
 
 
-class ObjectValidationError(ValidationError):
-    """
-    ...
-    """
-
-    def __init__(self, object_id, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.object_id = object_id
-
-
-# =====================================================================================================================
-
-
-class RelatedObjectsMixin(object):
-    """
-    ...
-    """
-
-    def __init__(self):
-        self.related_objects = list()
-
-    def clean(self):
-        for object_ in self.related_objects:
-            object_.full_clean()
-
-    def save_related_objects(self, *args, **kwargs):
-        for object_ in self.related_objects:
-            object_.save(*args, **kwargs)
-        self.related_objects = list()
-
-
-# =====================================================================================================================
-
-
-class Courier(models.Model, RelatedObjectsMixin):
+class Courier(models.Model):
     """
     Данные о курьере
     """
@@ -53,18 +21,42 @@ class Courier(models.Model, RelatedObjectsMixin):
         validators=[MinValueValidator(0)],
     )
 
-    # Тип курьера
+
+# =====================================================================================================================
+
+
+class CourierType(models.Model):
+    """
+    История типов курьера
+    """
+
     class AllowedTypes(models.TextChoices):
+        """
+        Возможные типы курьера
+        """
         FOOT = 'foot'
         BIKE = 'bike'
         CAR = 'car'
+
+    # Эпоха изменения
+    change_time = models.DateTimeField(auto_now=True)
+
+    # Тип курьера
     type = models.CharField(
-        max_length=4,
-        choices=AllowedTypes.choices,
+        max_length=4, choices=AllowedTypes.choices,
+    )
+
+    # Курьер
+    courier = models.ForeignKey(
+        Courier, on_delete=models.CASCADE,
     )
 
     @property
     def max_weight(self):
+        """
+        Получение максимального веса
+        :return Decimal: максимальный вес
+        """
         if self.type == self.AllowedTypes.FOOT:
             return Decimal('10.00')
         elif self.type == self.AllowedTypes.BIKE:
@@ -72,72 +64,24 @@ class Courier(models.Model, RelatedObjectsMixin):
         elif self.type == self.AllowedTypes.CAR:
             return Decimal('50.00')
 
-    @classmethod
-    def from_item(cls, item):
-        try:
-            courier_id = item.pop('courier_id')
-        except KeyError as e:
-            raise ValidationError(
-                'No "courier_id" parameter provided') from e
-
-        courier = Courier(id=courier_id)
-        courier.update(item, True)
-        try:
-            courier.full_clean()
-            return courier
-        except ValidationError as e:
-            raise ObjectValidationError(
-                courier_id, e.__str__()) from e
-
-    def update(self, item, strict_mode=False):
-        affected_fields = set()
-        try:
-            value = self._extract_value(item, 'courier_type', strict_mode)
-            if value is not None:
-                self.type = value
-                affected_fields.add('courier_type')
-
-            value = self._extract_value(item, 'regions', strict_mode)
-            if value is not None:
-                self.related_objects += Region.from_number_list(value, self)
-                affected_fields.add('regions')
-
-            value = self._extract_value(item, 'working_hours', strict_mode)
-            if value is not None:
-                self.related_objects += Interval.from_string_list(value, courier_fk=self)
-                affected_fields.add('working_hours')
-
-        except ValidationError as e:
-            raise ObjectValidationError(
-                self.id, e.__str__()) from e
-
-        if len(item) > 0:
-            raise ObjectValidationError(
-                self.id, 'Unsupported parameters provided')
-        return affected_fields
-
-    def to_item(self):
-        return {
-            'courier_id': self.id,
-            'courier_type': self.type,
-            'regions': [r.number for r in self.region_set.all()],
-            'working_hours': [str(i) for i in self.interval_set.all()],
-        }
-
-    @staticmethod
-    def _extract_value(item, key, strict_mode):
-        try:
-            return item.pop(key)
-        except KeyError as e:
-            if strict_mode:
-                raise ValidationError(
-                    'Missing required parameter "{0}"'.format(key)) from e
+    @property
+    def earnings_factor(self):
+        """
+        Получение к-та для расчета заработка
+        :return int: к-та для расчета заработка
+        """
+        if self.type == self.AllowedTypes.FOOT:
+            return 2
+        elif self.type == self.AllowedTypes.BIKE:
+            return 5
+        elif self.type == self.AllowedTypes.CAR:
+            return 9
 
 
 # =====================================================================================================================
 
 
-class Order(models.Model, RelatedObjectsMixin):
+class Order(models.Model):
     """
     Данные о заказе
     """
@@ -173,51 +117,18 @@ class Order(models.Model, RelatedObjectsMixin):
     )
 
     # Время назначения заказа
-    assign_datetime = models.DateTimeField(
+    assign_time = models.DateTimeField(
         null=True,
         blank=True,
         default=None,
     )
 
     # Время выполнения заказа
-    complete_datetime = models.DateTimeField(
+    complete_time = models.DateTimeField(
         null=True,
         blank=True,
         default=None,
     )
-
-    @classmethod
-    def from_item(cls, item):
-        try:
-            order_id = item.pop('order_id')
-        except KeyError as e:
-            raise ValidationError(
-                'No "order_id" parameter provided') from e
-
-        order = Order(id=order_id)
-        try:
-            order.weight = str(item.pop('weight'))
-            order.region = item.pop('region')
-            order.related_objects += Interval.from_string_list(
-                item.pop('delivery_hours'), order_fk=order
-            )
-        except KeyError as e:
-            raise ObjectValidationError(
-                order.id, 'Missing required parameters') from e
-        except ValidationError as e:
-            raise ObjectValidationError(
-                order.id, e.__str__()) from e
-
-        if len(item) > 0:
-            raise ObjectValidationError(
-                order.id, 'Unsupported parameters provided')
-
-        try:
-            order.full_clean()
-            return order
-        except ValidationError as e:
-            raise ObjectValidationError(
-                order_id, e.__str__()) from e
 
 
 # =====================================================================================================================
@@ -241,6 +152,12 @@ class Region(models.Model):
 
     @classmethod
     def from_number_list(cls, number_list, courier_fk):
+        """
+        Формирование списка объектов Region
+        :param list(int) number_list: список номеров районов
+        :param int | Courier courier_fk: внешний ключ на курьера
+        :return list(Region): список объектов Region
+        """
         try:
             return [
                 Region(number=number, courier=courier_fk)
@@ -248,7 +165,8 @@ class Region(models.Model):
             ]
         except TypeError as e:
             raise ValidationError(
-                '"number_list" must be an iterable') from e
+                '"number_list" must be an iterable'
+            ) from e
 
 
 # =====================================================================================================================
@@ -285,15 +203,30 @@ class Interval(models.Model):
     )
 
     def __str__(self):
-        return self.min_time.strftime('%H:%M') + '-' + \
-               self.max_time.strftime('%H:%M')
+        """
+        Получение строкового представления
+        :return str: строковое представление
+        """
+        return '{0}-{1}'.format(
+            self.min_time.strftime('%H:%M'),
+            self.max_time.strftime('%H:%M')
+        )
 
     def clean(self):
-        if self.max_time < self.min_time:
+        """
+        Валидация данных
+        """
+        if self.max_time <= self.min_time:
             raise ValidationError(
-                '"min_time" must be less than or equal to "max_time"')
+                '"min_time" must be less than "max_time"'
+            )
 
     def intersects_with(self, other_interval):
+        """
+        Проверка пересечения интервалов
+        :param Interval other_interval: интервал для проверки
+        :return bool: результат проверки
+        """
         if self.max_time <= other_interval.min_time:
             return False
         elif self.min_time >= other_interval.max_time:
@@ -303,6 +236,13 @@ class Interval(models.Model):
 
     @classmethod
     def from_string(cls, string, *, courier_fk=None, order_fk=None):
+        """
+        Создание объекта Interval из строки формата '%H:%M-%H:%M'
+        :param str string: строка
+        :param int | Courier | None courier_fk: внешний ключ на курьера
+        :param int | Order | None order_fk: внешний ключ на заказ
+        :return Interval: интервал
+        """
         match = re.compile(
             '([0-9]{2}:[0-9]{2})-([0-9]{2}:[0-9]{2})').search(string)
         if match is None:
@@ -319,11 +259,20 @@ class Interval(models.Model):
 
     @classmethod
     def from_string_list(cls, string_list, *, courier_fk=None, order_fk=None):
+        """
+        Создание списка объектов Interval из списка строк формата '%H:%M-%H:%M'
+        :param list(str) string_list: список строк
+        :param int | Courier | None courier_fk: внешний ключ на курьера
+        :param int | Order | None order_fk: внешний ключ на заказ
+        :return list(Interval): список объектов Interval
+        """
         try:
             return [
-                Interval.from_string(string, courier_fk=courier_fk, order_fk=order_fk)
+                Interval.from_string(
+                    string, courier_fk=courier_fk, order_fk=order_fk)
                 for string in string_list
             ]
         except TypeError as e:
             raise ValidationError(
-                '"string_list" must be an iterable') from e
+                '"string_list" must be an iterable'
+            ) from e

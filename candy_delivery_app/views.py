@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .core import (
+from .handlers import (
     ImportCouriersHandler,
     UpdateCourierHandler,
     ImportOrdersHandler,

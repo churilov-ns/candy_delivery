@@ -23,12 +23,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='order',
-            name='assign_datetime',
+            name='assign_time',
             field=models.DateTimeField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
             model_name='order',
-            name='complete_datetime',
+            name='complete_time',
             field=models.DateTimeField(blank=True, default=None, null=True),
         ),
         migrations.AlterField(

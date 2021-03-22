@@ -37,7 +37,7 @@ class AssignOrdersHandler(RequestHandler):
         assigned_orders = models.Order.objects.firter(
             Q(courier=courier) & Q(complete_datetime=None))
         if len(assigned_orders) > 0:
-            assign_datetime = assigned_orders[0].assign_datetime
+            assign_datetime = assigned_orders[0].assign_time
 
         assign_datetime = datetime.now()
         regions = set(courier.region_set.all())
@@ -61,7 +61,7 @@ class AssignOrdersHandler(RequestHandler):
                 break
 
             order.courier = courier
-            order.assign_datetime = assign_datetime
+            order.assign_time = assign_datetime
             order.save()
 
             assigned_orders.append(order)
