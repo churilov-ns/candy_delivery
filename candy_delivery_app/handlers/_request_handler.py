@@ -2,6 +2,7 @@ import sys
 import abc
 import json
 from django.http import JsonResponse
+from django.core.exceptions import ValidationError
 
 
 # =====================================================================================================================
@@ -62,6 +63,21 @@ class RequestHandler(abc.ABC):
         :param data: данные запроса
         """
         pass
+
+    @staticmethod
+    def _test_type(value, allowed_types):
+        """
+        Проверка соответствия типа значения
+        :param value: значение
+        :param allowed_types: множество разрешенных типов
+        :return: значение в случае успешной проверки
+        """
+        if type(value) in allowed_types:
+            return value
+        else:
+            raise ValidationError(
+                'Value type not allowed'
+            )
 
     def _create_response(self):
         """

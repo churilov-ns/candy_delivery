@@ -178,14 +178,17 @@ class Region(models.Model):
         :return list(Region): список объектов Region
         """
         try:
-            return [
-                Region(number=number, courier=courier_fk)
-                for number in number_list
-            ]
+            regions = list()
+            for number in number_list:
+                if not isinstance(number, int):
+                    raise ValidationError(
+                        'Elements of "number_list" must be a type of int')
+                regions.append(Region(number=number, courier=courier_fk))
+            return regions
+
         except TypeError as e:
             raise ValidationError(
-                '"number_list" must be an iterable'
-            ) from e
+                '"number_list" must be an iterable') from e
 
 
 # =====================================================================================================================

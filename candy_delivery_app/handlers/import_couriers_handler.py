@@ -31,23 +31,23 @@ class ImportCouriersHandler(ImportHandler):
         :param item: элемент запроса
         :return: объект
         """
-        cw = CourierWrapper(item.pop('courier_id'))
+        courier_id = item.pop('courier_id')
         try:
+            cw = CourierWrapper(ImportHandler._test_type(
+                courier_id, {int}))
             cw.object_.type = item.pop('courier_type')
             cw.regions = models.Region.from_number_list(
-                item.pop('regions'), cw.object_
-            )
+                item.pop('regions'), cw.object_)
             cw.working_hours = models.Interval.from_string_list(
-                item.pop('working_hours'), courier_fk=cw.object_
-            )
+                item.pop('working_hours'), courier_fk=cw.object_)
             cw.clean()
         except (KeyError, ValidationError) as e:
             raise ObjectValidationError(
-                cw.object_.id, str(e)) from e
+                courier_id, str(e)) from e
 
         if len(item) > 0:
             raise ObjectValidationError(
-                cw.object_.id, 'Unsupported properties provided'
+                courier_id, 'Unsupported properties provided'
             )
 
         return cw

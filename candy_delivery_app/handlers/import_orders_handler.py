@@ -31,26 +31,29 @@ class ImportOrdersHandler(ImportHandler):
         :param item: элемент запроса
         :return: объект
         """
-        ow = OrderWrapper(item.pop('order_id'))
+        order_id = item.pop('order_id')
         try:
-            ow.object_.weight = str(item.pop('weight'))
-            ow.object_.region = item.pop('region')
+            ow = OrderWrapper(ImportOrdersHandler._test_type(
+                order_id, {int}))
+            ow.object_.weight = str(ImportOrdersHandler._test_type(
+                item.pop('weight'), {int, float}))
+            ow.object_.region = ImportOrdersHandler._test_type(
+                item.pop('region'), {int})
             ow.delivery_hours = models.Interval.from_string_list(
-                item.pop('delivery_hours'), order_fk=ow.object_
-            )
+                item.pop('delivery_hours'), order_fk=ow.object_)
             ow.clean()
         except (KeyError, ValidationError) as e:
             raise ObjectValidationError(
-                ow.object_.id, str(e)) from e
+                order_id, str(e)) from e
 
         if len(ow.delivery_hours) == 0:
             raise ObjectValidationError(
-                ow.object_.id, 'Empty "delivery_hours" provided'
+                order_id, 'Empty "delivery_hours" provided'
             )
 
         if len(item) > 0:
             raise ObjectValidationError(
-                ow.object_.id, 'Unsupported properties provided'
+                order_id, 'Unsupported properties provided'
             )
 
         return ow
