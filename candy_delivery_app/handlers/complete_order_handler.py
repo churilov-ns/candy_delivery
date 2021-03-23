@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 from ._request_handler import RequestWithContentHandler
@@ -42,7 +43,7 @@ class CompleteOrderHandler(RequestWithContentHandler):
             except ObjectDoesNotExist:
                 start_time = order.delivery.assign_time
 
-            order.complete_time = data['complete_time']
+            order.complete_time = datetime.fromisoformat(data['complete_time'])
             order.delivery_duration = (order.complete_time - start_time)\
                 .total_seconds()
             order.save()
