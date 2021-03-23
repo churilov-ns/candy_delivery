@@ -263,7 +263,7 @@ class Interval(models.Model):
         :return Interval: интервал
         """
         match = re.compile(
-            '([0-9]{2}:[0-9]{2})-([0-9]{2}:[0-9]{2})').search(string)
+            '^([0-9]{2}:[0-9]{2})-([0-9]{2}:[0-9]{2})$').search(string)
         if match is None:
             raise ValidationError('Unsupported string format')
         i = Interval(

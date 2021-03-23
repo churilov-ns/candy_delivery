@@ -14,9 +14,15 @@ __all__ = [
 
 
 class UpdateCourierTest(TestCase):
+    """
+    Тесты на обновление данных о курьере
+    """
 
     @classmethod
     def setUpTestData(cls):
+        """
+        Инициализация тестовых данных
+        """
         Courier.objects.create(id=1, type='foot')
         Region.objects.create(courier_id=1, number=1)
         Region.objects.create(courier_id=1, number=12)
@@ -35,6 +41,10 @@ class UpdateCourierTest(TestCase):
         Region.objects.create(courier_id=3, number=33)
 
     def test_valid_requests(self):
+        """
+        Коррекные запросы
+        """
+
         data = \
             '{' \
             '   "courier_type": "car"' \
@@ -76,6 +86,10 @@ class UpdateCourierTest(TestCase):
         self.__test_request(3, data, 200, expected_content)
 
     def test_invalid_requests(self):
+        """
+        Некоррекные запросы
+        """
+
         self.__test_request(100, '{}', 404, None)
 
         data = \
@@ -87,6 +101,14 @@ class UpdateCourierTest(TestCase):
         self.__test_request(1, data, 400, None)
 
     def __test_request(self, courier_id, data, expected_status, expected_content):
+        """
+        Тестирование одного запроса
+        :param courier_id: id курьера
+        :param data: данные запроса
+        :param expected_status: ожидаемый статус ответа
+        :param expected_content: ожидаемое содержимое ответа
+        """
+
         response = self.client.patch(
             '/couriers/{0}'.format(courier_id), data, 'application/json')
         self.assertEqual(response.status_code, expected_status)
