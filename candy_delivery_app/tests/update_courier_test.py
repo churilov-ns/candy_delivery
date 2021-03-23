@@ -23,6 +23,7 @@ class UpdateCourierTest(TestCase):
         """
         Инициализация тестовых данных
         """
+        # Курьер 1
         Courier.objects.create(id=1, type='foot')
         Region.objects.create(courier_id=1, number=1)
         Region.objects.create(courier_id=1, number=12)
@@ -30,10 +31,12 @@ class UpdateCourierTest(TestCase):
         Interval.objects.create(courier_id=1, min_time='09:00', max_time='11:00')
         Interval.objects.create(courier_id=1, min_time='11:35', max_time='14:05')
 
+        # Курьер 2
         Courier.objects.create(id=2, type='bike')
         Region.objects.create(courier_id=2, number=22)
         Interval.objects.create(courier_id=2, min_time='09:00', max_time='18:00')
 
+        # Курьер 3
         Courier.objects.create(id=3, type='car')
         Region.objects.create(courier_id=3, number=12)
         Region.objects.create(courier_id=3, number=22)
@@ -90,13 +93,84 @@ class UpdateCourierTest(TestCase):
         Некоррекные запросы
         """
 
+        # Несуществующий курьер
         self.__test_request(100, '{}', 404, None)
 
+        # Неизвестное поле
         data = \
             '{' \
             '   "regions": [1, 5], ' \
             '   "working_hours": ["09:00-18:00", "19:05-23:55"],' \
             '   "unknown_field": 100500' \
+            '}'
+        self.__test_request(1, data, 400, None)
+
+        # Ошибки в courier_type
+        data = \
+            '{' \
+            '   "courier_type": "airplane",' \
+            '   "regions": [22],' \
+            '   "working_hours": ["09:00-18:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+        data = \
+            '{' \
+            '   "courier_type": null,' \
+            '   "regions": [22],' \
+            '   "working_hours": ["09:00-18:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+
+        # Ошибки в regions
+        data = \
+            '{' \
+            '   "courier_type": "bike",' \
+            '   "regions": 22,' \
+            '   "working_hours": ["09:00-18:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+        data = \
+            '{' \
+            '   "courier_type": "bike",' \
+            '   "regions": {"number": 22},' \
+            '   "working_hours": ["09:00-18:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+        data = \
+            '{' \
+            '   "courier_type": "bike",' \
+            '   "regions": [-1, 22, 32],' \
+            '   "working_hours": ["09:00-18:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+        data = \
+            '{' \
+            '   "courier_type": "bike",' \
+            '   "regions": ["22", 32.154],' \
+            '   "working_hours": ["09:00-18:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+
+        # Ошибки в working_hours
+        data = \
+            '{' \
+            '   "courier_type": "bike",' \
+            '   "regions": [22],' \
+            '   "working_hours": ["09:00:13 - 18:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+        data = \
+            '{' \
+            '   "courier_type": "bike",' \
+            '   "regions": [22],' \
+            '   "working_hours": ["18:00-09:00"]' \
+            '}'
+        self.__test_request(1, data, 400, None)
+        data = \
+            '{' \
+            '   "courier_type": "bike",' \
+            '   "regions": [22],' \
+            '   "working_hours": 12' \
             '}'
         self.__test_request(1, data, 400, None)
 
