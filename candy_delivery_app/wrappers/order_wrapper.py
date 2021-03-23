@@ -22,6 +22,11 @@ class OrderWrapper(ObjectWrapper):
     MODEL_TYPE = models.Order
 
     def __init__(self, object_, select_related=False):
+        """
+        Инициализация
+        :param int | models.Order object_: объект или id
+        :param bool select_related: флаг загрузки связанных объектов
+        """
         self.delivery_hours = list()
         super().__init__(object_, select_related)
 

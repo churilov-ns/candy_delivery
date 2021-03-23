@@ -1,4 +1,3 @@
-from decimal import Decimal
 from ._object_wrapper import ObjectWrapper
 from .order_wrapper import OrderWrapper
 from .. import models
@@ -24,6 +23,11 @@ class CourierWrapper(ObjectWrapper):
     MODEL_TYPE = models.Courier
 
     def __init__(self, object_, select_related=False):
+        """
+        Инициализация
+        :param int | models.Courier object_: объект или id
+        :param bool select_related: флаг загрузки связанных объектов
+        """
         self.regions = list()
         self.working_hours = list()
         super().__init__(object_, select_related)

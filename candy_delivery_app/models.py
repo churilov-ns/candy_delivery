@@ -143,6 +143,13 @@ class Order(models.Model):
         default=None,
     )
 
+    # Время доставки (в секундах)
+    delivery_duration = models.FloatField(
+        null=True,
+        blank=True,
+        default=None,
+    )
+
 
 # =====================================================================================================================
 

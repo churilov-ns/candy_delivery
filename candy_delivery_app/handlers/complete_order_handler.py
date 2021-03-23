@@ -35,9 +35,19 @@ class CompleteOrderHandler(RequestWithContentHandler):
                 order.delivery.courier.id != data['courier_id']:
             self._response = HttpResponseBadRequest
         else:
+            try:
+                start_time = order.delivery.order_set.exclude(
+                    complete_time=None
+                ).latest('complete_time').complete_time
+            except ObjectDoesNotExist:
+                start_time = order.delivery.assign_time
+
             order.complete_time = data['complete_time']
+            order.delivery_duration = (order.complete_time - start_time)\
+                .total_seconds()
             order.save()
             order.delivery.update_complete()
+
             self._status = 200
             self._content = {
                 'order_id': order.id,
