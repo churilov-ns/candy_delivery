@@ -1,5 +1,4 @@
 import json
-from decimal import Decimal
 from django.test import TestCase
 from ..models import *
 
@@ -18,6 +17,8 @@ __all__ = [
 class AssignOrdersTest(TestCase):
     """
     Тесты назначения заказов курьерам
+    TODO: проверка наличия courier_id в запросе
+    TODO: assign с частично доставленным развозом
     FIXME: важна ли сортировка?
     FIXME: формат assign_time
     FIXME: предпочитать заказ с большим весом при прочих равных?
