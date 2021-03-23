@@ -18,6 +18,9 @@ class UpdateCourierTest(TestCase):
     Тесты на обновление данных о курьере
     """
 
+    # Отключить ограничение на вывод
+    maxDiff = None
+
     @classmethod
     def setUpTestData(cls):
         """

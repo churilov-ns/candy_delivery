@@ -1,4 +1,5 @@
 import re
+from datetime import time
 from decimal import Decimal
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -269,14 +270,20 @@ class Interval(models.Model):
             '^([0-9]{2}:[0-9]{2})-([0-9]{2}:[0-9]{2})$').search(string)
         if match is None:
             raise ValidationError('Unsupported string format')
-        i = Interval(
-            min_time=match.groups()[0],
-            max_time=match.groups()[1]
-        )
+
+        try:
+            i = Interval(
+                min_time=time.fromisoformat(match.groups()[0]),
+                max_time=time.fromisoformat(match.groups()[1])
+            )
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
+
         if courier_fk is not None:
             i.courier = courier_fk
         elif order_fk is not None:
             i.order = order_fk
+
         return i
 
     @classmethod

@@ -1,6 +1,6 @@
-import sys
 import abc
 import json
+import traceback
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 
@@ -49,7 +49,7 @@ class RequestHandler(abc.ABC):
                 data = json.loads(request.read())
             self._process(data)
         except Exception as error:
-            print(error, file=sys.stderr)
+            traceback.print_exc(error)
             self._status = 500
             self._content = {
                 'error': str(error),

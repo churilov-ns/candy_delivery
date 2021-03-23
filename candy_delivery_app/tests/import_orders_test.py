@@ -213,8 +213,20 @@ class ImportOrdersTest(TestCase):
             '       {' \
             '           "order_id": 18,' \
             '           "weight": 0.23,' \
-            '           "region": "my_best_region",' \
+            '           "region": 1,' \
             '           "delivery_hours": ["18:00-09:00"]' \
+            '       },' \
+            '       {' \
+            '           "order_id": 19,' \
+            '           "weight": 0.23,' \
+            '           "region": 1,' \
+            '           "delivery_hours": ["00:73-09:00"]' \
+            '       },' \
+            '       {' \
+            '           "order_id": 20,' \
+            '           "weight": 0.23,' \
+            '           "region": 1,' \
+            '           "delivery_hours": ["18:00-36:15"]' \
             '       },' \
             \
             \
@@ -252,7 +264,9 @@ class ImportOrdersTest(TestCase):
             '           {"id": 15}, '
             '           {"id": 16}, '
             '           {"id": 17}, '
-            '           {"id": 18} '
+            '           {"id": 18}, '
+            '           {"id": 19}, '
+            '           {"id": 20} '
             '       ]'
             '   }'
             '}',

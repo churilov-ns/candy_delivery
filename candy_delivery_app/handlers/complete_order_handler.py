@@ -28,12 +28,12 @@ class CompleteOrderHandler(RequestWithContentHandler):
         try:
             order = models.Order.objects.get(id=data['order_id'])
         except ObjectDoesNotExist:
-            self._response = HttpResponseBadRequest
+            self._response = HttpResponseBadRequest()
             return
 
         if order.delivery is None or \
                 order.delivery.courier.id != data['courier_id']:
-            self._response = HttpResponseBadRequest
+            self._response = HttpResponseBadRequest()
         else:
             try:
                 start_time = order.delivery.order_set.exclude(

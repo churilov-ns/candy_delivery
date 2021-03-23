@@ -30,7 +30,7 @@ class AssignOrdersHandler(RequestWithContentHandler):
         try:
             cw = CourierWrapper.select(data['courier_id'], True)
         except ObjectDoesNotExist:
-            self._response = HttpResponseBadRequest
+            self._response = HttpResponseBadRequest()
             return
 
         try:
@@ -44,7 +44,7 @@ class AssignOrdersHandler(RequestWithContentHandler):
             )
 
             total_weight = Decimal('0.00')
-            free_orders = models.Order.objects.firter(
+            free_orders = models.Order.objects.filter(
                 delivery=None).order_by('weight')
             for order in free_orders:
                 if not cw.test_order(OrderWrapper(order, True)):
