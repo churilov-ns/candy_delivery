@@ -29,6 +29,7 @@ class CourierWrapper(ObjectWrapper):
         :param bool select_related: флаг загрузки связанных объектов
         """
         self.regions = list()
+        self.region_set = set()
         self.working_hours = list()
         super().__init__(object_, select_related)
 
@@ -39,6 +40,9 @@ class CourierWrapper(ObjectWrapper):
         self.regions = list(
             self.object_.region_set.all()
         )
+        self.region_set = {
+            r.number for r in self.regions
+        }
         self.working_hours = list(
             self.object_.interval_set.all().order_by('min_time')
         )
@@ -73,7 +77,7 @@ class CourierWrapper(ObjectWrapper):
         :return bool: True, если назначение возможно, иначе False
         """
         # Район
-        if order_wrapper.object_.region not in self.regions:
+        if order_wrapper.object_.region not in self.region_set:
             return False
 
         # Часы работы / доставки
