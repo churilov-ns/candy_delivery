@@ -17,8 +17,6 @@ __all__ = [
 class AssignOrdersTest(TestCase):
     """
     Тесты назначения заказов курьерам
-    TODO: проверка наличия courier_id в запросе
-    TODO: assign с частично доставленным развозом
     FIXME: важна ли сортировка?
     FIXME: формат assign_time
     FIXME: предпочитать заказ с большим весом при прочих равных?
@@ -61,7 +59,10 @@ class AssignOrdersTest(TestCase):
         """
         Отправка запроса на сревер
         """
-        data = json.dumps({'courier_id': courier_id})
+        if courier_id is None:
+            data = json.dumps({})
+        else:
+            data = json.dumps({'courier_id': courier_id})
         response1 = self.client.post(
             '/orders/assign', data, 'application/json')
         response2 = self.client.post(
@@ -77,6 +78,9 @@ class AssignOrdersTest(TestCase):
         Назначение несуществующему курьеру
         """
         response = self._post_assign(100500, False)
+        self.assertEqual(response.status_code, 400)
+
+        response = self._post_assign(None, False)
         self.assertEqual(response.status_code, 400)
 
     def test_empty_orders(self):
@@ -209,4 +213,31 @@ class AssignOrdersTest(TestCase):
             json.loads(response.content)['orders'], [
                 {'id': 7},
             ]
+        )
+
+    def test_assign_with_incomplete_delivery(self):
+        """
+        Назначение при незавершенном заказе
+        """
+        Order.objects.create(id=1, weight=Decimal('5'), region=3)
+        Interval.objects.create(min_time='00:00', max_time='23:59', order_id=1)  # -> 1
+        Order.objects.create(id=2, weight=Decimal('4.51'), region=3)
+        Interval.objects.create(min_time='00:00', max_time='23:59', order_id=2)  # -> 1
+        Order.objects.create(id=3, weight=Decimal('0.49'), region=3)
+        Interval.objects.create(min_time='00:00', max_time='23:59', order_id=3)  # -> 1
+
+        delivery = Delivery.objects.create(
+            courier_id=1, earnings_factor=1)
+        delivery.order_set.create(id=4, weight=Decimal('1'), region=1,
+                                  complete_time=delivery.assign_time)
+        delivery.order_set.create(id=5, weight=Decimal('1'), region=1)
+        delivery.order_set.create(id=6, weight=Decimal('1'), region=1)
+
+        response = self._post_assign(1)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            json.loads(response.content), {
+                'orders': [{'id': 5}, {'id': 6}],
+                'assign_time': delivery.assign_time.isoformat(),
+            }
         )

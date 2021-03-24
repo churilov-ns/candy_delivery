@@ -29,7 +29,7 @@ class AssignOrdersHandler(RequestWithContentHandler):
         """
         try:
             cw = CourierWrapper.select(data['courier_id'], True)
-        except ObjectDoesNotExist:
+        except (KeyError, ObjectDoesNotExist):
             self._response = HttpResponseBadRequest()
             return
 
@@ -71,7 +71,8 @@ class AssignOrdersHandler(RequestWithContentHandler):
         orders = delivery.order_set.all()
         if len(orders) > 0:
             return {
-                'orders': [{'id': o.id} for o in orders],
+                'orders': [
+                    {'id': o.id} for o in orders if o.complete_time is None],
                 'assign_time': delivery.assign_time,
             }
         else:

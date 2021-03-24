@@ -21,7 +21,7 @@ class CompleteOrderTest(TestCase):
     Тесты завершения заказа
     TODO: проверка наличия courier_id в запросе
     TODO: проверка наличия order_id в запросе
-    TODO: валидация complete_time
+    TODO: валидация complete_time (формат, assign_time)
     TODO: проверить завершить уже завершенный заказ
     """
 
