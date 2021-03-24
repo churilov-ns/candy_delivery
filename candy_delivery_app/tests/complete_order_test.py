@@ -1,6 +1,5 @@
 import pytz
 import json
-from decimal import Decimal
 from datetime import datetime
 from django.test import TestCase
 from ..models import *
@@ -19,7 +18,7 @@ __all__ = [
 
 class CompleteOrderTest(TestCase):
     """
-    Тесты зершения заказа
+    Тесты завершения заказа
     TODO: проверка наличия courier_id в запросе
     TODO: проверка наличия order_id в запросе
     TODO: валидация complete_time
@@ -34,16 +33,16 @@ class CompleteOrderTest(TestCase):
         """
         Инициализация тестовых данных
         """
-        cls.courier1 = Courier.objects.create(id=1, type='foot')
+        courier = Courier.objects.create(id=1, type='foot')
         cls.delivery1 = Delivery.objects.create(
-            courier=cls.courier1, earnings_factor=cls.courier1.earnings_factor)
+            courier=courier, earnings_factor=courier.earnings_factor)
         Order.objects.create(id=1, weight=Decimal('1'), region=1, delivery=cls.delivery1)
         Order.objects.create(id=2, weight=Decimal('1'), region=1, delivery=cls.delivery1)
         Order.objects.create(id=3, weight=Decimal('1'), region=1, delivery=cls.delivery1)
 
-        cls.courier2 = Courier.objects.create(id=2, type='foot')
+        courier = Courier.objects.create(id=2, type='foot')
         cls.delivery2 = Delivery.objects.create(
-            courier=cls.courier2, earnings_factor=cls.courier2.earnings_factor)
+            courier=courier, earnings_factor=courier.earnings_factor)
         Order.objects.create(id=4, weight=Decimal('1'), region=1, delivery=cls.delivery2)
         Order.objects.create(id=5, weight=Decimal('1'), region=1, delivery=cls.delivery2)
 

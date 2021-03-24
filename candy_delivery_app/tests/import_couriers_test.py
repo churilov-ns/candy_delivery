@@ -16,7 +16,6 @@ __all__ = [
 class ImportCouriersTest(TestCase):
     """
     Тесты на регистрацию курьеров в системе
-    TODO: нарушить уникальность id
     """
 
     # Отключить ограничение на вывод
@@ -217,6 +216,36 @@ class ImportCouriersTest(TestCase):
             '           {"id": 11}, '
             '           {"id": 12}, '
             '           {"id": 13} '
+            '       ]'
+            '   }'
+            '}',
+        )
+
+    def test_unique_id(self):
+        """
+        Тест на уникальность id
+        """
+        models.Courier.objects.create(id=1, type='foot')
+
+        data = \
+            '{' \
+            '   "data": [' \
+            '       {' \
+            '           "courier_id": 1, ' \
+            '           "courier_type": "foot", ' \
+            '           "regions": [1, 12, 22], ' \
+            '           "working_hours": ["11:35-14:05", "09:00-11:00"]' \
+            '       }' \
+            '   ]' \
+            '}'
+        response = self.client.post('/couriers', data, 'application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(
+            response.content,
+            '{'
+            '   "validation_error": {'
+            '       "couriers": ['
+            '           {"id": 1} '
             '       ]'
             '   }'
             '}',

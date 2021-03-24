@@ -77,15 +77,17 @@ class UpdateCourierHandler(RequestWithContentHandler, CourierHandler):
 
         # Сначала выбросим все, что не подходит
         # по району и времени доставки
+        temp_orders = list()
         total_weight = Decimal('0.00')
-        for i, order in enumerate(incomplete_orders):
+        for order in incomplete_orders:
             if courier_wrapper.test_order(
                     OrderWrapper(order, True)):
                 total_weight += order.weight
+                temp_orders.append(order)
             else:
                 order.delivery = None
                 order.save()
-                del incomplete_orders[i]
+        incomplete_orders = temp_orders
 
         # Теперь выбросим заказы, не подходящие по весу
         while len(incomplete_orders) > 0 and \

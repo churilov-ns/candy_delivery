@@ -33,8 +33,8 @@ class ImportCouriersHandler(ImportHandler):
         """
         courier_id = item.pop('courier_id')
         try:
-            cw = CourierWrapper(ImportHandler._test_type(
-                courier_id, {int}))
+            cw = CourierWrapper(
+                ImportCouriersHandler._test_type(courier_id, {int}))
             cw.object_.type = item.pop('courier_type')
             cw.regions = models.Region.from_number_list(
                 item.pop('regions'), cw.object_)

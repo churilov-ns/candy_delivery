@@ -17,7 +17,6 @@ __all__ = [
 class ImportOrdersTest(TestCase):
     """
     Тесты на регистрацию заказов в системе
-    TODO: нарушить уникальность id
     """
 
     # Отключить ограничение на вывод
@@ -268,6 +267,36 @@ class ImportOrdersTest(TestCase):
             '           {"id": 18}, '
             '           {"id": 19}, '
             '           {"id": 20} '
+            '       ]'
+            '   }'
+            '}',
+        )
+
+    def test_unique_id(self):
+        """
+        Тест на уникальность id
+        """
+        models.Order.objects.create(id=1, weight=Decimal('1'), region=1)
+
+        data = \
+            '{' \
+            '   "data": [' \
+            '       {' \
+            '           "order_id": 1,' \
+            '           "weight": 0.23,' \
+            '           "region": 12,' \
+            '           "delivery_hours": ["09:00-18:00"]' \
+            '       }' \
+            '   ]' \
+            '}'
+        response = self.client.post('/orders', data, 'application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(
+            response.content,
+            '{'
+            '   "validation_error": {'
+            '       "orders": ['
+            '           {"id": 1} '
             '       ]'
             '   }'
             '}',
