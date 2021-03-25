@@ -37,8 +37,7 @@ class GetCourierInfoHandler(RequestWithoutContentHandler, CourierHandler):
         else:
             self._content['earnings'] = q.aggregate(
                 Sum('earnings_factor'))['earnings_factor__sum'] * 500
-            t = q.values(
-                'order__region',
-                avg_duration=Avg('order__delivery_duration')
-            ).aggregate(Min('avg_duration'))['avg_duration__min']
+            t = q.values('order__region').\
+                annotate(avg_duration=Avg('order__delivery_duration')).\
+                aggregate(Min('avg_duration'))['avg_duration__min']
             self._content['rating'] = 5. * (3600. - min(t, 3600.)) / 3600.

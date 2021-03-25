@@ -46,21 +46,22 @@ class CompleteOrderHandler(RequestWithContentHandler):
             self._response = HttpResponseBadRequest()
             return
 
-        try:
-            start_time = order.delivery.order_set.exclude(
-                complete_time=None
-            ).latest('complete_time').complete_time
-        except ObjectDoesNotExist:
-            start_time = order.delivery.assign_time
+        if order.complete_time is None:  # если заказ еще не завершен
+            try:
+                start_time = order.delivery.order_set.exclude(
+                    complete_time=None
+                ).latest('complete_time').complete_time
+            except ObjectDoesNotExist:
+                start_time = order.delivery.assign_time
 
-        order.complete_time = complete_time
-        order.delivery_duration = (order.complete_time - start_time)\
-            .total_seconds()
-        order.save()
-        order.delivery.update_complete()
+            order.complete_time = complete_time
+            order.delivery_duration = (
+                    order.complete_time - start_time).total_seconds()
+            order.save()
+            order.delivery.update_complete()
 
-        if order.delivery_duration <= 0:
-            self.__recalculate_duration(order.delivery)
+            if order.delivery_duration < 0.:
+                self.__recalculate_duration(order.delivery)
 
         self._status = 200
         self._content = {
