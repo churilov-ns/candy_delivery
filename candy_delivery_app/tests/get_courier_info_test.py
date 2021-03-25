@@ -111,12 +111,12 @@ class GetCourierInfoTest(TestCase):
         delivery.order_set.create(id=2, weight=Decimal('1'), region=2)
         delivery.order_set.create(id=3, weight=Decimal('1'), region=3)
         self.__post_complete(
-            GetCourierInfoTest.courier.id, 2,
-            delivery.assign_time + timedelta(seconds=300.)
-        )
-        self.__post_complete(
             GetCourierInfoTest.courier.id, 1,
             delivery.assign_time + timedelta(seconds=3600.)
+        )
+        self.__post_complete(
+            GetCourierInfoTest.courier.id, 2,
+            delivery.assign_time + timedelta(seconds=300.)
         )
         self.__post_complete(
             GetCourierInfoTest.courier.id, 3,

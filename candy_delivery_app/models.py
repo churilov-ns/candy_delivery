@@ -2,6 +2,7 @@ import re
 from datetime import time
 from decimal import Decimal
 from django.db import models
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import (
     MinValueValidator, MaxValueValidator
@@ -80,7 +81,7 @@ class Delivery(models.Model):
 
     # Время назначения развоза
     assign_time = models.DateTimeField(
-        auto_now=True
+        default=timezone.now
     )
 
     # Признак завершения развоза

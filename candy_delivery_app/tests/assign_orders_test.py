@@ -1,5 +1,6 @@
 import json
 from django.test import TestCase
+from django.core.serializers.json import DjangoJSONEncoder
 from ..models import *
 
 
@@ -238,6 +239,8 @@ class AssignOrdersTest(TestCase):
         self.assertEqual(
             json.loads(response.content), {
                 'orders': [{'id': 5}, {'id': 6}],
-                'assign_time': delivery.assign_time.isoformat(),
+                'assign_time': DjangoJSONEncoder().encode(
+                    delivery.assign_time
+                )[1:-1],
             }
         )

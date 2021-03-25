@@ -17,7 +17,6 @@ __all__ = [
 class UpdateCourierTest(TestCase):
     """
     Тесты на обновление данных о курьере
-    TODO: проверить, что earnings_factor фиксируется
     """
 
     # Отключить ограничение на вывод
@@ -203,6 +202,7 @@ class UpdateCourierTest(TestCase):
         courier = Courier.objects.get(id=2)
         delivery = Delivery.objects.create(
             courier=courier, earnings_factor=courier.earnings_factor)
+        test_earnings_factor = delivery.earnings_factor
         order1 = Order.objects.create(
             id=1, weight=Decimal('0.01'), region=22, delivery=delivery,
             complete_time=delivery.assign_time)
@@ -234,6 +234,7 @@ class UpdateCourierTest(TestCase):
 
         delivery.refresh_from_db()
         self.assertEqual(delivery.is_complete, False)
+        self.assertEqual(test_earnings_factor, delivery.earnings_factor)
 
     def test_with_incomplete_delivery_2(self):
         """
