@@ -3,3 +3,4 @@ from .update_courier_handler import *
 from .import_orders_handler import *
 from .assign_orders_handler import *
 from .complete_order_handler import *
+from .get_courier_info_handler import *

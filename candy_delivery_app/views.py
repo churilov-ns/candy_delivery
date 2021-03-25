@@ -1,12 +1,6 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .handlers import (
-    ImportCouriersHandler,
-    UpdateCourierHandler,
-    ImportOrdersHandler,
-    AssignOrdersHandler,
-    CompleteOrderHandler,
-)
+from .handlers import *
 
 
 # =====================================================================================================================
@@ -27,7 +21,7 @@ def get_patch_courier(request):
     if request.method == 'PATCH':
         return UpdateCourierHandler().process(request)
     elif request.method == 'GET':
-        pass
+        return GetCourierInfoHandler().process(request)
     else:
         return JsonResponse(
             {'error': 'Allowed methods are: PATCH, GET'}, status=405

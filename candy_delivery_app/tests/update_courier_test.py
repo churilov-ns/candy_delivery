@@ -17,6 +17,7 @@ __all__ = [
 class UpdateCourierTest(TestCase):
     """
     Тесты на обновление данных о курьере
+    TODO: проверить, что earnings_factor фиксируется
     """
 
     # Отключить ограничение на вывод

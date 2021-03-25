@@ -1,6 +1,6 @@
 from django.db.models import Sum, Avg, Min
 from ._courier_handler import CourierHandler
-from ._request_handler import RequestWithContentHandler
+from ._request_handler import RequestWithoutContentHandler
 
 
 # =====================================================================================================================
@@ -14,7 +14,7 @@ __all__ = [
 # =====================================================================================================================
 
 
-class GetCourierInfoHandler(RequestWithContentHandler, CourierHandler):
+class GetCourierInfoHandler(RequestWithoutContentHandler, CourierHandler):
     """
     Обработчик запроса на получение данных о курьере
     """
@@ -37,6 +37,8 @@ class GetCourierInfoHandler(RequestWithContentHandler, CourierHandler):
         else:
             self._content['earnings'] = q.aggregate(
                 Sum('earnings_factor'))['earnings_factor__sum'] * 500
-            t = q.values('order__region', avg_duration=Avg('delivery_duration'))\
-                .aggregate(Min('avg_duration'))['avg_duration__min']
+            t = q.values(
+                'order__region',
+                avg_duration=Avg('order__delivery_duration')
+            ).aggregate(Min('avg_duration'))['avg_duration__min']
             self._content['rating'] = 5. * (3600. - min(t, 3600.)) / 3600.
