@@ -1,3 +1,4 @@
+from pyrfc3339 import generate
 from decimal import Decimal
 from django.http import HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
@@ -72,8 +73,11 @@ class AssignOrdersHandler(RequestWithContentHandler):
         if len(orders) > 0:
             return {
                 'orders': [
-                    {'id': o.id} for o in orders if o.complete_time is None],
-                'assign_time': delivery.assign_time,
+                    {'id': o.id} for o in orders if o.complete_time is None
+                ],
+                'assign_time': generate(
+                    delivery.assign_time, utc=False, microseconds=True
+                ),
             }
         else:
             delivery.delete()
