@@ -4,9 +4,7 @@ from decimal import Decimal
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django.core.validators import (
-    MinValueValidator, MaxValueValidator
-)
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 # =====================================================================================================================
@@ -28,7 +26,7 @@ class Courier(models.Model):
     # Идентификатор
     id = models.IntegerField(
         primary_key=True,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(1)],
     )
 
     # Тип курьера
@@ -111,7 +109,7 @@ class Order(models.Model):
     # Идентификор
     id = models.IntegerField(
         primary_key=True,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(1)],
     )
 
     # Вес
@@ -126,7 +124,7 @@ class Order(models.Model):
 
     # Район
     region = models.IntegerField(
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(1)],
     )
 
     # Развоз
@@ -163,7 +161,7 @@ class Region(models.Model):
 
     # Идентификатор района
     number = models.IntegerField(
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(1)],
     )
 
     # Курьер

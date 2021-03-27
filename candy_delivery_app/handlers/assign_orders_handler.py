@@ -1,7 +1,7 @@
-from pyrfc3339 import generate
+import pyrfc3339
 from decimal import Decimal
 from django.http import HttpResponseBadRequest
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from ._request_handler import RequestWithContentHandler
 from ..wrappers import CourierWrapper, OrderWrapper
 from .. import models
@@ -29,8 +29,10 @@ class AssignOrdersHandler(RequestWithContentHandler):
         :param data: данные запроса
         """
         try:
-            cw = CourierWrapper.select(data['courier_id'], True)
-        except (KeyError, ObjectDoesNotExist):
+            courier_id = AssignOrdersHandler._test_type(
+                data['courier_id'], {int})
+            cw = CourierWrapper.select(courier_id, True)
+        except (KeyError, ValidationError, ObjectDoesNotExist):
             self._response = HttpResponseBadRequest()
             return
 
@@ -75,7 +77,7 @@ class AssignOrdersHandler(RequestWithContentHandler):
                 'orders': [
                     {'id': o.id} for o in orders if o.complete_time is None
                 ],
-                'assign_time': generate(
+                'assign_time': pyrfc3339.generate(
                     delivery.assign_time, utc=False, microseconds=True
                 ),
             }
