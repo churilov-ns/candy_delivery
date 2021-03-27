@@ -105,12 +105,9 @@ class CandyDeliveryAppLiveTest(unittest.TestCase):
         )
 
         # 2) Первый решил посмотреть статистику сразу, но ошибся ID
-        # FIXME: завешивает сервер!!!
-        """
         response = self._request('GET', '/couriers/11')
         self.assertEqual(response.status, 404)
         self.assertEqual(response.reason, 'Not Found')
-        """
 
         # 3) Собрался
         response = self._request('GET', '/couriers/1')
