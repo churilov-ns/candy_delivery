@@ -29,7 +29,7 @@ class CandyDeliveryAppLiveTest(unittest.TestCase):
         Завершение
         """
         self.conn.close()
-        
+
     def _get_response(self):
         """
         Получить ответ по готовности
@@ -47,6 +47,8 @@ class CandyDeliveryAppLiveTest(unittest.TestCase):
         """
         Отправить обычный запрос
         """
+        self.conn.close()
+        self.conn.connect()
         self.conn.request(method, url)
         return self._get_response()
 
@@ -54,6 +56,8 @@ class CandyDeliveryAppLiveTest(unittest.TestCase):
         """
         Отправить JSON-запрос
         """
+        self.conn.close()
+        self.conn.connect()
         self.conn.request(
             method, url, json.dumps(data),
             {'Content-Type': 'application/json'})

@@ -1,0 +1,62 @@
+Сласти от всех напастей
+=======================
+
+
+В данной инструкии описан процесс запуска сервиса на сервере Apache2.
+В качестве СУБД используется PostgreSQL.
+
+Список используемых сторонних Python-библиотек:
+ - django (версия 3.1.7): фреймворк для веб-приложений;
+ - psycopg2: Python-API для СУБД PostgreSQL;
+ - pyrfc3339: библиотека для форматирования даты/времени в соответствии со стандартом RFC3339.
+
+
+Для того, чтобы развернуть и запустить сервис необходимо выполнить следующие дествия.
+
+1) Установить СУБД PostgreSQL, выполнив следующие команды:
+   - sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+   - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+   - sudo apt-get update
+   - sudo apt-get -y install postgresql
+   
+2) Установить веб-сервер Apache2:
+   - sudo apt-get install apache2
+   - sudo apt-get install libapache2-mod-wsgi-py3
+   
+3) Загрузить проект "candy_delivery" из Git-репозитория:
+   - sudo apt-get install git
+   - cd /var/www
+   - sudo git clone ...
+
+4) Установить внешние зависимости:
+   - sudo apt-get install python3-venv
+   - cd /var/www/candy_delivery
+   - sudo python3 -m venv ./venv
+   - source ./venv/bin/activate
+   - pip3 install django==3.1.7
+   - pip3 install psycopg2-binary
+   - pip3 install pyrfc3339
+   - deactivate
+
+5) Дать пользователю www-data права на каталог с проектом:
+  - sudo chown www-data:www-data -R /var/www/candy_delivery
+  - sudo chmod 777 -R /var/www/candy_delivery
+
+6) Подключить виртуальный хост Apache:
+   - sudo cp /var/www/candy_delivery/deploy/ports.conf /etc/apache2
+   - sudo cp /var/www/candy_delivery/deploy/candy-delivery.conf /etc/apache2/sites-available
+   - sudo a2ensite /etc/apache2/sites-available/candy-delivery.conf
+   - sudo systemctl reload apache2
+
+7) Создать БД сервиса:
+   - sudo -u postgres psql
+   - CREATE USER candy_delivery_admin WITH PASSWORD 'qwerty' CREATEDB;
+   - CREATE DATABASE candy_delivery;
+   - GRANT ALL PRIVILEGES ON DATABASE candy_delivery TO candy_delivery_admin;
+   - exit;
+
+8) Запустить тесты:
+   - cd /var/www/candy_delivery
+   - source ./venv/bin/activate
+   - python3 manage.py test
+   - deactivate
